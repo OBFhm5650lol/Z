@@ -1,0 +1,207 @@
+-- Create the main GUI frame
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SineWaveGUI"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Detect platform (PC or Mobile)
+local isMobile = game:GetService("UserInputService").TouchEnabled
+local isPC = not isMobile
+
+-- Set sizes based on platform
+local guiWidth, guiHeight
+local wavePointDensity -- How many points to draw in the wave
+local counterFontSize, bypassFontSize
+
+if isPC then
+    guiWidth = 400
+    guiHeight = 250
+    wavePointDensity = 1.5 -- More points for smoother wave on PC
+    counterFontSize = 18
+    bypassFontSize = 18
+else
+    guiWidth = 280
+    guiHeight = 180
+    wavePointDensity = 2.5 -- Fewer points for better mobile performance
+    counterFontSize = 14
+    bypassFontSize = 14
+end
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, guiWidth, 0, guiHeight)
+frame.Position = UDim2.new(0.5, -guiWidth/2, 0.5, -guiHeight/2)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.ClipsDescendants = true
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(1, -25, 0, 5)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeButton.BorderSizePixel = 0
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 14
+closeButton.ZIndex = 2
+closeButton.Parent = frame
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- Get game name
+local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+if #gameName > 20 then
+    gameName = string.sub(gameName, 1, 17).."..."
+end
+
+-- Header with bypass label, game name, and counter
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, -40, 0, 25)
+header.Position = UDim2.new(0, 5, 0, 5)
+header.BackgroundTransparency = 1
+header.Parent = frame
+
+local bypassLabel = Instance.new("TextLabel")
+bypassLabel.Size = UDim2.new(0.6, 0, 1, 0)
+bypassLabel.Position = UDim2.new(0, 0, 0, 0)
+bypassLabel.Text = "bypass running | "..gameName
+bypassLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+bypassLabel.BackgroundTransparency = 1
+bypassLabel.Font = Enum.Font.SourceSansBold
+bypassLabel.TextSize = bypassFontSize
+bypassLabel.TextXAlignment = Enum.TextXAlignment.Left
+bypassLabel.TextTruncate = Enum.TextTruncate.AtEnd
+bypassLabel.Parent = header
+
+local counterLabel = Instance.new("TextLabel")
+counterLabel.Size = UDim2.new(0.4, 0, 1, 0)
+counterLabel.Position = UDim2.new(0.6, 0, 0, 0)
+counterLabel.Text = "[00.0]"
+counterLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+counterLabel.BackgroundTransparency = 1
+counterLabel.Font = Enum.Font.SourceSansBold
+counterLabel.TextSize = counterFontSize
+counterLabel.TextXAlignment = Enum.TextXAlignment.Right
+counterLabel.Parent = header
+
+-- Canvas for the sine wave
+local canvas = Instance.new("Frame")
+canvas.Size = UDim2.new(1, -10, 1, -40)
+canvas.Position = UDim2.new(0, 5, 0, 35)
+canvas.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+canvas.BorderSizePixel = 0
+canvas.Parent = frame
+
+-- Game ID frequency mapping
+local frequencyMap = {
+    [155615604] = "low",
+    [621129760] = "low",
+    [2788229376] = "low",
+    [189707] = "mid",
+    [142823291] = "mid",
+    [13772394625] = "mid",
+    [8888615802] = "high",
+    [6403373529] = "high",
+    [292439477] = "high",
+    [17625359962] = "high",
+    [2788229376] = "low",
+    [5049420610] = "low",
+    [4669040] = "low",
+    [12137249458] = "low",
+    [292439477] = "high",
+    [3233893879] = "mid",
+    [13822889] = "mid",
+    [9377953133] = "mid",
+    [14202073004] = "mid",
+    [14518422161] = "mid",
+    [8888615802] = "high",
+    [13945903793] = "high",
+    [9183932460] = "high",
+    [15694891095] = "high"
+}
+
+-- Get current game ID and determine frequency
+local currentGameId = game.PlaceId
+local frequencyLevel = frequencyMap[currentGameId] or "mid"
+
+-- Set parameters based on frequency level
+local frequency, amplitude, speed, counterSpeed
+if frequencyLevel == "low" then
+    frequency = 0.5
+    amplitude = isPC and 60 or 40
+    speed = 0.7
+    counterSpeed = 0.5
+elseif frequencyLevel == "mid" then
+    frequency = 1
+    amplitude = isPC and 80 or 50
+    speed = 1
+    counterSpeed = 1
+elseif frequencyLevel == "high" then
+    frequency = 2
+    amplitude = isPC and 100 or 60
+    speed = 1.5
+    counterSpeed = 2
+end
+
+-- Sine wave drawing function
+local function drawSineWave(time)
+    local width = canvas.AbsoluteSize.X
+    local height = canvas.AbsoluteSize.Y
+    local centerY = height / 2
+    
+    -- Clear previous drawings
+    for _, child in ipairs(canvas:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+    
+    -- Draw new sine wave with platform-appropriate density
+    for x = 0, width, wavePointDensity do
+        local normalizedX = x / width * 2 * math.pi
+        local y = centerY + math.sin(normalizedX * frequency + time * speed) * amplitude
+        
+        local point = Instance.new("Frame")
+        point.Size = UDim2.new(0, 2, 0, 2)
+        point.Position = UDim2.new(0, x, 0, y - 1)
+        point.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        point.BorderSizePixel = 0
+        point.Parent = canvas
+    end
+end
+
+-- Counter update function
+local function updateCounter(time)
+    -- Generate random number between 0 and 99.9
+    local randomValue = math.floor(math.random() * 1000) / 10
+    -- Format with leading zero if needed
+    local formattedValue = string.format("[%05.1f]", randomValue)
+    counterLabel.Text = formattedValue
+end
+
+-- Animation loop
+local heartbeatConnection
+local lastCounterUpdate = 0
+heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function(step)
+    local time = tick()
+    drawSineWave(time)
+    
+    -- Update counter at different rates based on frequency level
+    if time - lastCounterUpdate > (1 / counterSpeed) then
+        updateCounter(time)
+        lastCounterUpdate = time
+    end
+end)
+
+-- Cleanup when GUI is closed
+frame.Destroying:Connect(function()
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+    end
+end)
